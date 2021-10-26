@@ -1,22 +1,26 @@
 try:
-    import jwt
+    from jwcrypto import jwt, jwk
+    from jsonpath_ng import jsonpath
+    from jsonpath_ng.ext import parse
 except ImportError:
-     print("Couldn't import jwt, if you don't need JSON web token support that's OK")
-from jsonpath_ng import jsonpath
-from jsonpath_ng.ext import parse
+     print("Couldn't import files required for JWT parsing, if you don't need JWT/JWT-encoded VCs that's OK")
 
 class jwt_pep:
-    def verify_bearer(self, token=None, signing_key=None, tokens_expire = True, filter=None, proof=None): 
+    def verify_jwt(self, token=None, signing_key=None, signing_key_type="pem", tokens_expire = True, filter=None, proof=None): 
         try:
-            decoded_token = jwt.decode(token, signing_key, algorithms='RS256', options={"verify_exp":tokens_expire, "verify_aud":False})
+            ver_key = None
+            if (signing_key_type == "pem"):
+                ver_key = jwk.JWK.from_pem(signing_key)
+            decoded_token = jwt.JWT(jwt=token, key=ver_key)
             if(filter):
                 if(self._filter(decoded_token, filter)):
                     return True, 0
                 else:
                     return False, 101 #Filter failed
             return True, 0
-        except:
-            return False, 100 #Token cannot be decoded
+        except Exception as e:
+            print("Error" + str(e))
+            return False, str(e) #Token cannot be decoded
     
     def _filter(self, json_obj, filters):  
         for filter in filters:
