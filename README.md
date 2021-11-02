@@ -23,8 +23,8 @@ pip3 install jwcrypto
 Tests are executed using pytest and pytest-asyncio. To install it execute: 
 
 ```bash
-pip3 install -U pytest 
-pip3 install pytest-asyncio
+python3 -m pip install -U pytest 
+python3 -m pip  install pytest-asyncio
 ```
 
 ### Running the tests
