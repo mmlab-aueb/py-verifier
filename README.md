@@ -5,8 +5,8 @@
 IAA component is built using Python3. It depends on the following packages:
 
 ```bash
-pip3 install Werkzeug
-pip3 install jsonpath-ng
+python3 -m pip install Werkzeug
+python3 -m pip install jsonpath-ng
 ```
 
 Depending on the type of access tokens that will be used the following additional dependencies are required
@@ -14,7 +14,7 @@ Depending on the type of access tokens that will be used the following additiona
 #### JWT
 
 ```bash
-pip3 install jwcrypto
+python3 -m pip install jwcrypto
 ```
 
 ## Testing
@@ -23,8 +23,9 @@ pip3 install jwcrypto
 Tests are executed using pytest and pytest-asyncio. To install it execute: 
 
 ```bash
-python3 -m pip install -U pytest 
-python3 -m pip  install pytest-asyncio
+python3 -m pip install  pytest 
+python3 -m pip install pytest-asyncio
+python3 -m pip install requests
 ```
 
 ### Running the tests
