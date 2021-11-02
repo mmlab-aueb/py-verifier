@@ -23,38 +23,37 @@ def verify_dpop (dpop_b64, htu):
     except:
         return False, None
 
-import json
 
+def generate_dpop(owner_key):
+    """
+    Generates a DPoP proof
 
-def generate_dpop():
-    client_key = jwk.JWK.generate(kty='EC', crv='secp256k1')
-
+    :param owner_key(jwk.JWK the owner key pair)
+    """
     dpop_header = {
         "typ":"dpop+jwt",
-        "alg":"ES256K",
-        "jwk": client_key.export_public(as_dict=True)
+        "alg":"EdDSA",
+        "jwk": owner_key.export_public(as_dict=True)
     }
     dpop_claims = {
-        "jti":hex(random.getrandbits(256)),
+        "jti":"-BwC3ESc6acc2lTc",
         "htm":"POST",
         "htu":"https://server.example.com/token",
-        "iat": int(time.time())
+        "iat":1562262616
     }
-
-
     dpop = jwt.JWT(header = dpop_header, claims = dpop_claims)
-    dpop.make_signed_token(client_key)
+    dpop.make_signed_token(owner_key)
+    return dpop
+
+
+def main():
+    privatkeyBase64url = "n--gJkymNdp5JQgSfLRoA5T_3nmaLj1THQuOvyrySPs"
+    publickeyBase64url = "bKmPLs6MsZaeVtEQF4rCjoVfi37XgRTEl-4ZgqmgBw0"
+    jsonkey  = {'kty': 'OKP', 'crv': 'Ed25519', 'x': publickeyBase64url, 'd': privatkeyBase64url}
+    owner_key = jwk.JWK.from_json(json.dumps(jsonkey))
+    print(owner_key.thumbprint())
+    dpop = generate_dpop(owner_key)
     print(dpop.serialize())
-    print(len(dpop.serialize()))
-    start = time.time()
-    dpop_b64 = dpop.serialize().split('.')
-    dpop_b64_header = json.loads(base64url_decode(dpop_b64[0]).decode('utf-8'))
-    #print(dpop_b64_header['jwk'])
-    dpop_key = jwk.JWK.from_json(json.dumps(dpop_b64_header['jwk']))
-    try: 
-        dpop_verified = jwt.JWT(jwt=dpop.serialize(), key=dpop_key)
-        end = time.time()
-        print(end - start)
-        print(json.loads(dpop_verified.header)['jwk'])
-    except:
-        print("Error in decoding")
+
+if __name__ == '__main__':
+    main()
