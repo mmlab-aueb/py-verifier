@@ -39,8 +39,8 @@ def generate_dpop(owner_key):
     }
     dpop_claims = {
         "jti": "-BwC3ESc6acc2lTc",
-        "htm": "POST",
-        "htu": "https://server.example.com/token",
+        "htm": "GET",
+        "htu": "https://remote.cloud/zerocorp",
         "iat": 1562262616
     }
     dpop = jwt.JWT(header=dpop_header, claims=dpop_claims)
@@ -53,12 +53,15 @@ def main():
     >>> key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
     >>> print (key.export(as_dict=True))
     '''
-    OWNER_KEY = {'kty': 'OKP', 'crv': 'Ed25519', 'x': '6vcFHbzn1sING4-QYZ1Iai3d2mKU1u0KYD3rkKhnMao',
-                 'd': '_TTTDArI9aYlafDiXzucKt_AMmrr7uDnyNEEqGTb-Mk'}
-    ISSUER_KEY = {'kty': 'OKP', 'crv': 'Ed25519', 'x': 's_juSSVh2bQgeAZjBl3Tn7ddO8Auovlj00veVlOZqqA',
-                  'd': 'gjst4ZqUvUfKVTGewO2EmiDdzs2YKHBPGCB9YorCa8E'}
+    OWNER_KEY = {"kty": "OKP", "crv": "Ed25519", "x": "6vcFHbzn1sING4-QYZ1Iai3d2mKU1u0KYD3rkKhnMao",
+                 "d": "_TTTDArI9aYlafDiXzucKt_AMmrr7uDnyNEEqGTb-Mk"}
+    ISSUER_KEY = {"kty": "OKP", "crv": "Ed25519", "x": "s_juSSVh2bQgeAZjBl3Tn7ddO8Auovlj00veVlOZqqA",
+                  "d": "gjst4ZqUvUfKVTGewO2EmiDdzs2YKHBPGCB9YorCa8E"}
     JTW_VC_CLAIMS = {
         "iss": "https://zero.corp",
+        "cnf":{
+            "jwk":{"kty": "OKP", "crv": "Ed25519", "x": "6vcFHbzn1sING4-QYZ1Iai3d2mKU1u0KYD3rkKhnMao"} #owner public key
+        },
         "vc": {
             "@context": [
                 "https://www.w3.org/2018/credentials/v1",
@@ -81,11 +84,13 @@ def main():
     }
     owner_key = jwk.JWK.from_json(json.dumps(OWNER_KEY))
     dpop = generate_dpop(owner_key)
+    print("DPoP:")
     print(dpop.serialize())
 
     issuer_key = jwk.JWK.from_json(json.dumps(ISSUER_KEY))
     jwt_vc = jwt.JWT(header=JTW_VC_HEADER, claims=JTW_VC_CLAIMS)
     jwt_vc.make_signed_token(issuer_key)
+    print("VC:")
     print(jwt_vc.serialize())
 
 

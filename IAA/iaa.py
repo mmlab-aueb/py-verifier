@@ -4,6 +4,8 @@ from jwt_pep                 import jwt_pep
 from w3c_vc_pep              import w3c_vc_pep
 from pop_pep                 import pop_pep
 from http_proxy              import http_proxy
+from jwcrypto.common         import base64url_decode
+from jwcrypto                import jwt, jwk
 
 import json
 import sys
@@ -32,7 +34,7 @@ class IAAHandler():
         path     = environ.get('PATH_INFO')
         code     = 401
         resource = {}
-        output   = 'Invalide or missing input parameters'
+        output   = 'Invalid or missing input parameters'
         output_header = {}
         auth    = req.headers.get('Authorization')
         if (path in self.conf['resources']):
@@ -45,22 +47,22 @@ class IAAHandler():
             auth_type, auth_grant = auth.split(" ",1)
             #*********W3C-VC***********
             if (resource['authorization']['type'] == "w3c-vc" and auth_type == "Bearer-W3C-VC"):
-                if ('signing_key' not in resource['authorization']):
-                    with open(resource['authorization']['signing_key_file'], mode='rb') as file: 
-                        resource['authorization']['signing_key'] = file.read()
+                if ('issuer_key' not in resource['authorization']):
+                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
+                        resource['authorization']['issuer_key'] = file.read()
                 result, ver_output = self.w3c_vc_pep.verify_w3c_vc(vc=base64.urlsafe_b64decode(auth_grant).decode(), 
-                    signing_key  = resource['authorization']['signing_key'],  
+                    issuer_key  = resource['authorization']['issuer_key'],  
                     filter= resource['authorization']['filters'])
                 if (result == True):
                     is_client_authorized = True
 
             #*********JWT***********
             if (resource['authorization']['type'] == "jwt" and auth_type == "Bearer"):
-                if ('signing_key' not in resource['authorization']):
-                    with open(resource['authorization']['signing_key_file'], mode='rb') as file: 
-                        resource['authorization']['signing_key'] = file.read()
+                if ('issuer_key' not in resource['authorization']):
+                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
+                        resource['authorization']['issuer_key'] = file.read()
                 result, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    signing_key  = resource['authorization']['signing_key'], 
+                    issuer_key  = resource['authorization']['issuer_key'], 
                     tokens_expire = resource['authorization']['tokens_expire'], 
                     filter= resource['authorization']['filters'])
                 if (result == True):
@@ -71,24 +73,34 @@ class IAAHandler():
                 step1 = False
                 step2 = False
                 step3 = False
+                filter = None
                 # Step 1: Validate VC
                 # The VC is just a signed JWT
-                if ('signing_key' not in resource['authorization']):
-                    with open(resource['authorization']['signing_key_file'], mode='rb') as file: 
-                        resource['authorization']['signing_key'] = file.read()
+                if ('issuer_key' not in resource['authorization']):
+                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
+                        resource['authorization']['issuer_key'] = file.read()
+                if ('filters' in resource['authorization']):
+                    filter = resource['authorization']['filters']
                 step1, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    signing_key  = resource['authorization']['signing_key'], 
-                    signing_key_type = "pem",
+                    issuer_key  = resource['authorization']['issuer_key'], 
+                    issuer_key_type = resource['authorization']['issuer_key_type'],
                     tokens_expire = resource['authorization']['tokens_expire'], 
-                    filter= resource['authorization']['filters'])
+                    filter = filter)
                 
                 # Step 2: Extract client public key
+                client_key = jwk.JWK()
                 if (step1):
-                    step2 = True
+                    try:
+                        jwt_vc = json.loads(ver_output)
+                        client_key.from_json(json.dumps(jwt_vc['cnf']['jwk']))
+                        step2 = True
+                    except:
+                        step2 = False    
 
                 # Step 3: Validate DPoP
                 if (step1 and step2):
-                    step3 = True
+                    dpop = req.headers.get('dpop')
+                    step3, ver_output = self.jwt_pep.verify_dpop(dpop)
 
                 if (step1 and step2 and step3):
                    is_client_authorized = True
@@ -99,7 +111,7 @@ class IAAHandler():
             if ('proxy' in  resource):
                 code, output = self.http_proxy.forward(environ, resource['proxy']['proxy_pass'], resource['proxy'].get('header_rewrite'))
             else:
-                code = 200
+                code = "200"
                 output = "OK"
         else:
             output = ver_output
@@ -119,7 +131,7 @@ def create_app():
 def main(): 
     from werkzeug.serving import run_simple
     app = create_app()
-    run_simple('', 9000, app)
+    run_simple('localhost', 9000, app)
 
 if __name__ == '__main__':
     main()
