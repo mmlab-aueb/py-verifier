@@ -1,8 +1,6 @@
 from werkzeug.wrappers       import Request, Response
 from werkzeug.datastructures import Headers
 from jwt_pep                 import jwt_pep
-from w3c_vc_pep              import w3c_vc_pep
-from pop_pep                 import pop_pep
 from http_proxy              import http_proxy
 from jwcrypto.common         import base64url_decode
 from jwcrypto                import jwt, jwk
@@ -25,9 +23,6 @@ class IAAHandler():
                 print(error)
                 sys.exit("Cannot parse the configuration file")
         self.jwt_pep = jwt_pep()
-        self.w3c_vc_pep = w3c_vc_pep()
-        self.http_proxy = http_proxy()
-        self.pop_pep    = pop_pep()
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)
@@ -42,33 +37,24 @@ class IAAHandler():
         elif ('default' in self.conf['resources']):
             resource = self.conf['resources']["default"]
         is_client_authorized = False
-        ver_output = "0"
+        ver_output = "Forbidden!"
         if ('authorization' in resource and auth):
             auth_type, auth_grant = auth.split(" ",1)
-            #*********W3C-VC***********
-            if (resource['authorization']['type'] == "w3c-vc" and auth_type == "Bearer-W3C-VC"):
-                if ('issuer_key' not in resource['authorization']):
-                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
-                        resource['authorization']['issuer_key'] = file.read()
-                result, ver_output = self.w3c_vc_pep.verify_w3c_vc(vc=base64.urlsafe_b64decode(auth_grant).decode(), 
-                    issuer_key  = resource['authorization']['issuer_key'],  
-                    filter= resource['authorization']['filters'])
-                if (result == True):
-                    is_client_authorized = True
-
             #*********JWT***********
-            if (resource['authorization']['type'] == "jwt" and auth_type == "Bearer"):
+            if (resource['authorization']['type'] == "jwt-vc" and auth_type == "Bearer"):
+                filter = None
                 if ('issuer_key' not in resource['authorization']):
                     with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
                         resource['authorization']['issuer_key'] = file.read()
-                result, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
+                if ('filters' in resource['authorization']):
+                    filter = resource['authorization']['filters']
+                is_client_authorized, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
                     issuer_key  = resource['authorization']['issuer_key'], 
+                    issuer_key_type = resource['authorization']['issuer_key_type'],
                     tokens_expire = resource['authorization']['tokens_expire'], 
-                    filter= resource['authorization']['filters'])
-                if (result == True):
-                    is_client_authorized = True
+                    filter = filter)
 
-            #*********JWT-encded VC with DPoP (eSSIF)***********
+            #*********JWT with DPoP (eSSIF)***********
             if (resource['authorization']['type'] == "jwt-vc-dpop" and auth_type == "DPoP"):
                 step1 = False
                 step2 = False
@@ -112,7 +98,7 @@ class IAAHandler():
                 code, output = self.http_proxy.forward(environ, resource['proxy']['proxy_pass'], resource['proxy'].get('header_rewrite'))
             else:
                 code = "200"
-                output = "OK"
+                output = "Authorized request!"
         else:
             output = ver_output
         response = Response(output.encode(), status=code, mimetype='application/json')
