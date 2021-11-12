@@ -23,6 +23,7 @@ class IAAHandler():
                 print(error)
                 sys.exit("Cannot parse the configuration file")
         self.jwt_pep = jwt_pep()
+        self.http_proxy = http_proxy()
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)

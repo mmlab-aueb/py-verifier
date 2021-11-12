@@ -15,5 +15,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(b'Hello world')
 
 
-httpd = socketserver.TCPServer(('', 8080), Handler)
+print("\n * Protected resource on  http://localhost:8080/ ")
+httpd = socketserver.TCPServer(('localhost', 8080), Handler)
 httpd.serve_forever()
