@@ -10,3 +10,10 @@ class TestJWT:
         response  = requests.get("http://localhost:9000/secure/jwt-vc", headers = headers)
         print(response.text)
         assert(response.status_code == 200)
+
+    def test_valid_authorization_with_pem_get(self):
+        token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2Mzc3MTEyOTUsImV4cCI6MTYzNzc5NzY5NSwiaXNzIjoiaHR0cHM6Ly9hcy5jb250cm9sdGhpbmdzLmdyIiwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL21tLmF1ZWIuZ3IvY29udGV4dHMvY2FwYWJpbGl0aWVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJDYXBhYmlsaXRpZXNDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImNhcGFiaWxpdGllcyI6eyJSYXNwYmVycnkgUGkiOlsiUkVTVF9BUEkiLCJWSUVXX1NUQVRVUyJdfX19fQ.rZ_hk3z58aVPkME4fa5Ij1E2YSAv4WDprviRDhxrooPb2ExAfmFsyiTAtWmXNoWplw49Ffxf2beoxTRrue6cSg"
+        headers = {'Authorization':'Bearer ' + token, 'Accept': 'application/json'}
+        response  = requests.get("http://localhost:9000/secure/jwt-vc-pem", headers = headers)
+        print(response.text)
+        assert(response.status_code == 200)
