@@ -18,13 +18,9 @@ class jwt_pep:
             decoded_token = jwt.JWS()
             decoded_token.deserialize(token)
             decoded_token.verify(ver_key)
-            '''
             if(filter):
-                if(self._filter(decoded_token, filter)):
-                    return True, "0"
-                else:
-                    return False, "101" #Filter failed
-            '''
+                if(not self._filter(json.loads(decoded_token.payload.decode()), filter)):
+                    return False, "Filter verification failed" #Filter failed
             return True, decoded_token.payload.decode()
         except Exception as e:
             print("Error" + str(e))
