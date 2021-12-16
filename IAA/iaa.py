@@ -8,11 +8,7 @@ from jwcrypto                import jwt, jwk
 import json
 import sys
 import asyncio
-import requests
 import base64
-
-
-  
 
 class IAAHandler():
     def __init__(self):
