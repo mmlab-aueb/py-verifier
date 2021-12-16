@@ -4,8 +4,10 @@ DPoP based on https://tools.ietf.org/html/draft-fett-oauth-dpop-04
 import json
 import random
 import time
+import hashlib
 from jwcrypto import jwt, jwk
-from jwcrypto.common import base64url_decode
+from jwcrypto.common import base64url_decode, base64url_encode
+
 
 
 def verify_dpop(dpop_b64, htu):
@@ -26,7 +28,7 @@ def verify_dpop(dpop_b64, htu):
         return False, None
 
 
-def generate_dpop(owner_key):
+def generate_dpop(owner_key, access_token):
     """
     Generates a DPoP proof
 
@@ -34,14 +36,15 @@ def generate_dpop(owner_key):
     """
     dpop_header = {
         "typ": "dpop+jwt",
-        "alg": "EdDSA",
+        "alg": "ES256",
         "jwk": owner_key.export_public(as_dict=True)
     }
     dpop_claims = {
         "jti": "-BwC3ESc6acc2lTc",
         "htm": "GET",
         "htu": "https://remote.cloud/zerocorp",
-        "iat": 1562262616
+        "iat": 1562262616,
+        "ath": base64url_encode(hashlib.sha256(access_token.encode('utf-8')).digest())
     }
     dpop = jwt.JWT(header=dpop_header, claims=dpop_claims)
     dpop.make_signed_token(owner_key)
@@ -50,48 +53,17 @@ def generate_dpop(owner_key):
 
 def main():
     '''
-    >>> key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+    >>> key = jwk.JWK.generate(kty='EC', crv='P-256')
     >>> print (key.export(as_dict=True))
     '''
-    OWNER_KEY = {"kty": "OKP", "crv": "Ed25519", "x": "6vcFHbzn1sING4-QYZ1Iai3d2mKU1u0KYD3rkKhnMao",
-                 "d": "_TTTDArI9aYlafDiXzucKt_AMmrr7uDnyNEEqGTb-Mk"}
-    ISSUER_KEY = {"kty": "OKP", "crv": "Ed25519", "x": "s_juSSVh2bQgeAZjBl3Tn7ddO8Auovlj00veVlOZqqA",
-                  "d": "gjst4ZqUvUfKVTGewO2EmiDdzs2YKHBPGCB9YorCa8E"}
-    JTW_VC_CLAIMS = {
-        "iss": "https://zero.corp",
-        "cnf":{
-            "jwk":{"kty": "OKP", "crv": "Ed25519", "x": "6vcFHbzn1sING4-QYZ1Iai3d2mKU1u0KYD3rkKhnMao"} #owner public key
-        },
-        "vc": {
-            "@context": [
-                "https://www.w3.org/2018/credentials/v1",
-                "https://mm.aueb.gr/contexts/access_control/v1"
-            ],
-            "id": "https://www.sofie-iot.eu/credentials/examples/1",
-            "type": ["VerifiableCredential"],
-            "credentialSubject": {
-                "type": ["Capabilities"],
-                "Capabilities": [
-                    "Read Inventory",
-                    "Write Inventory"
-                ]
-            }
-        }
-    }
-    JTW_VC_HEADER = {
-        "alg": "EdDSA",
-        "typ": "JWT",
-    }
+    OWNER_KEY = {'kty': 'EC', 'crv': 'P-256', 'x': 'z30WuxpsPow8KpH0N93vW24nA0HD48_MluqgdEUvtU4', 'y': 'VcKco12BZFPu5HU2LBLotTD9NitdlNxnBLngD-eTapM', 'd': 'UCe_iiyGTQf13KyLPhLgjVCT3gSx4APgNSbS7uyLxN8'}
+
+    VC = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5tbWxhYi5lZHUuZ3IiLCJjbmYiOnsiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJ6MzBXdXhwc1BvdzhLcEgwTjkzdlcyNG5BMEhENDhfTWx1cWdkRVV2dFU0IiwieSI6IlZjS2NvMTJCWkZQdTVIVTJMQkxvdFREOU5pdGRsTnhuQkxuZ0QtZVRhcE0ifSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL21tLmF1ZWIuZ3IvY29udGV4dHMvY2FwYWJpbGl0aWVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJDYXBhYmlsaXRpZXNDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImNhcGFiaWxpdGllcyI6eyJDbG91ZCBzdG9yYWdlIjpbIkZMX1JFQUQiXX19fX0.ibjct11ZXik3He2n-GfugMyTT5qHOJpm7qqvZHJIzEq1SDnnL1_pbAwtfNg3nHnzw7eliHtotHj3SlDzBStMVQ"
+
     owner_key = jwk.JWK.from_json(json.dumps(OWNER_KEY))
-    dpop = generate_dpop(owner_key)
+    dpop = generate_dpop(owner_key, VC)
     print("DPoP:")
     print(dpop.serialize())
-
-    issuer_key = jwk.JWK.from_json(json.dumps(ISSUER_KEY))
-    jwt_vc = jwt.JWT(header=JTW_VC_HEADER, claims=JTW_VC_CLAIMS)
-    jwt_vc.make_signed_token(issuer_key)
-    print("VC:")
-    print(jwt_vc.serialize())
 
 
 if __name__ == '__main__':
