@@ -50,8 +50,7 @@ class IAAHandler():
                 if ('filters' in resource['authorization']):
                     filter = resource['authorization']['filters']
                 step1, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    trusted_issuers  = resource['authorization']['trusted_issuers'], 
-                    tokens_expire = resource['authorization']['tokens_expire'], 
+                    trusted_issuers  = resource['authorization']['trusted_issuers'],  
                     filter = filter)
                 
                 # Step 2: Verify proof-of-possession if necessary

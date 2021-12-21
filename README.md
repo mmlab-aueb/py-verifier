@@ -20,14 +20,13 @@ The core configuration file of the component is `conf/iaa.conf`. There the prote
 The file contains a mapping from resource relative URIs to authentication and proxy configurations.
 The authentication entry of a resource contains the following fields:
 
-| Field | Possible values |
-| --- | --- |
-| type | "jwt-vc", "jwt-vc-dpop" |
-| tokens_expire | true, false (optional, used only with type "jwt") |
-| issuer_key | The public key of the issuer (see issuer_key_type for accepted key types) |
-| issuer_key_file | A path to the key used for signing a JWT (it cannot be used together with issuer_key)|
-| issuer_key_type | "jwk", "pem" |
-| filters | A list of json-path queries |
+- **type**: It can be `jwt-vc` or `jwt-vc-dpop`
+- **filters**: A list of json-path queries
+- **trusted_issuers**: A list of objects that map issuer ids (i.e., the `iss` claim) to the following:
+  - **issuer_key_type**: The format of the issuer public key, it can be `jw` or `pem_file`
+  - **issuer_key**: if issuer_key_type is jwk then this is the jwk, if issuer_key_type is pem_file the this is the path to the pem file
+
+
 
 ## Testing
 

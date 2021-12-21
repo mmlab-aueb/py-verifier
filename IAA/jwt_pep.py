@@ -8,7 +8,7 @@ except ImportError:
      print("Couldn't import files required for JWT parsing, if you don't need JWT/JWT-encoded VCs that's OK")
 
 class jwt_pep:
-    def verify_jwt(self, token, trusted_issuers, tokens_expire = True, filter=None): 
+    def verify_jwt(self, token, trusted_issuers, filter=None): 
         try:
             decoded_token = jwt.JWS()
             decoded_token.deserialize(token)
