@@ -37,23 +37,8 @@ class IAAHandler():
         ver_output = "Forbidden!"
         if ('authorization' in resource and auth):
             auth_type, auth_grant = auth.split(" ",1)
-            '''
-            #*********JWT***********
-            if (resource['authorization']['type'] == "jwt-vc" and auth_type == "Bearer"):
-                filter = None
-                if ('issuer_key' not in resource['authorization']):
-                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
-                        resource['authorization']['issuer_key'] = file.read()
-                if ('filters' in resource['authorization']):
-                    filter = resource['authorization']['filters']
-                is_client_authorized, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    issuer_key  = resource['authorization']['issuer_key'], 
-                    issuer_key_type = resource['authorization']['issuer_key_type'],
-                    tokens_expire = resource['authorization']['tokens_expire'], 
-                    filter = filter)
-            '''
 
-            #*********JWT with DPoP (eSSIF)***********
+            #*********JWT encoded VC***********
             if ((resource['authorization']['type'] == "jwt-vc" and auth_type == "Bearer") or 
                 (resource['authorization']['type'] == "jwt-vc-dpop" and auth_type == "DPoP")):
                 step1 = False # Validate VC
@@ -62,18 +47,14 @@ class IAAHandler():
                 filter = None
                 # Step 1: Validate VC
                 # The VC is just a signed JWT
-                if ('issuer_key' not in resource['authorization']):
-                    with open(resource['authorization']['issuer_key_file'], mode='rb') as file: 
-                        resource['authorization']['issuer_key'] = file.read()
                 if ('filters' in resource['authorization']):
                     filter = resource['authorization']['filters']
                 step1, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    issuer_key  = resource['authorization']['issuer_key'], 
-                    issuer_key_type = resource['authorization']['issuer_key_type'],
+                    trusted_issuers  = resource['authorization']['trusted_issuers'], 
                     tokens_expire = resource['authorization']['tokens_expire'], 
                     filter = filter)
                 
-                # Step 2: Extract client public key
+                # Step 2: Verify proof-of-possession if necessary
                 if (step1 and auth_type == "Bearer"):  # We do not use DPoP
                     step2 = True
                 if (step1 and auth_type == "DPoP"):

@@ -8,22 +8,34 @@ except ImportError:
      print("Couldn't import files required for JWT parsing, if you don't need JWT/JWT-encoded VCs that's OK")
 
 class jwt_pep:
-    def verify_jwt(self, token=None,issuer_key=None,issuer_key_type="pem", tokens_expire = True, filter=None, proof=None): 
+    def verify_jwt(self, token, trusted_issuers, tokens_expire = True, filter=None): 
         try:
-            ver_key = None
-            if (issuer_key_type == "pem"):
-                ver_key = jwk.JWK.from_pem(issuer_key)
-            if (issuer_key_type == "jwt"):
-                ver_key = jwk.JWK.from_json(json.dumps(issuer_key))
             decoded_token = jwt.JWS()
             decoded_token.deserialize(token)
+            token_payload = json.loads(decoded_token.objects['payload'].decode())
+            # Read the iss claim
+            iss = token_payload['iss']
+            # Check if iss is trusted
+            if (iss not in trusted_issuers): # Not rusted issuer
+                return False, "Issuer is not trusted"
+            # Retreive the issuer key    
+            ver_key = None
+            issuer_key_type = trusted_issuers[iss]['issuer_key_type']
+            issuer_key = trusted_issuers[iss]['issuer_key']
+            if (issuer_key_type == "pem_file"):
+                with open(issuer_key, mode='rb') as file: 
+                    pem_file = file.read()
+                ver_key = jwk.JWK.from_pem(pem_file)
+            if (issuer_key_type == "jwt"):
+                ver_key = jwk.JWK.from_json(json.dumps(issuer_key))
+            # Verify the JWS
             decoded_token.verify(ver_key)
+            # Check for filters
             if(filter):
                 if(not self._filter(json.loads(decoded_token.payload.decode()), filter)):
                     return False, "Filter verification failed" #Filter failed
             return True, decoded_token.payload.decode()
         except Exception as e:
-            print("Error" + str(e))
             return False, str(e) #Token cannot be decoded
     
     def verify_dpop(self, dpop_b64, htu=None):
