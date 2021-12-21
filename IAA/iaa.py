@@ -37,6 +37,7 @@ class IAAHandler():
         ver_output = "Forbidden!"
         if ('authorization' in resource and auth):
             auth_type, auth_grant = auth.split(" ",1)
+            '''
             #*********JWT***********
             if (resource['authorization']['type'] == "jwt-vc" and auth_type == "Bearer"):
                 filter = None
@@ -50,11 +51,13 @@ class IAAHandler():
                     issuer_key_type = resource['authorization']['issuer_key_type'],
                     tokens_expire = resource['authorization']['tokens_expire'], 
                     filter = filter)
+            '''
 
             #*********JWT with DPoP (eSSIF)***********
-            if (resource['authorization']['type'] == "jwt-vc-dpop" and auth_type == "DPoP"):
-                step1 = False
-                step2 = False
+            if ((resource['authorization']['type'] == "jwt-vc" and auth_type == "Bearer") or 
+                (resource['authorization']['type'] == "jwt-vc-dpop" and auth_type == "DPoP")):
+                step1 = False # Validate VC
+                step2 = False # Validate DPoP
                 step3 = False
                 filter = None
                 # Step 1: Validate VC
@@ -71,21 +74,19 @@ class IAAHandler():
                     filter = filter)
                 
                 # Step 2: Extract client public key
-                client_key = jwk.JWK()
-                if (step1):
+                if (step1 and auth_type == "Bearer"):  # We do not use DPoP
+                    step2 = True
+                if (step1 and auth_type == "DPoP"):
+                    client_key = jwk.JWK()
                     try:
                         jwt_vc = json.loads(ver_output)
                         client_key.from_json(json.dumps(jwt_vc['cnf']['jwk']))
-                        step2 = True
+                        dpop = req.headers.get('dpop')
+                        step2, ver_output = self.jwt_pep.verify_dpop(dpop)
                     except:
                         step2 = False    
 
-                # Step 3: Validate DPoP
-                if (step1 and step2):
-                    dpop = req.headers.get('dpop')
-                    step3, ver_output = self.jwt_pep.verify_dpop(dpop)
-
-                if (step1 and step2 and step3):
+                if (step1 and step2 ):
                    is_client_authorized = True
 
         elif('authorization' not in resource):
