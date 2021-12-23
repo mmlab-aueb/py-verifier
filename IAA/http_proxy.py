@@ -20,6 +20,9 @@ class http_proxy:
         elif (req.method == "PUT"): 
             put_data = req.data
             response  = requests.put(target + path, headers = headers, data = put_data.decode())
+        elif (req.method == "POST"): 
+            post_data = req.data
+            response  = requests.post(target + path, headers = headers, data = post_data.decode())
         code = response.status_code
         output = response.text
         return code, output

@@ -12,7 +12,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_PUT(self):
         self.send_response(HTTPStatus.OK)
         self.end_headers()
-        self.wfile.write(b'Hello world')
+        self.wfile.write(b'Hello world from PUT')
+
+    def do_POST(self):
+        self.send_response(HTTPStatus.OK)
+        self.end_headers()
+        self.wfile.write(b'Hello world from POST')
 
 
 print("\n * Protected resource on  http://localhost:8080/ ")
