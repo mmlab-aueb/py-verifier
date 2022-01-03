@@ -1,4 +1,7 @@
 import json
+import time
+
+from resolver import Resolver
 try:
     from jwcrypto import jwt, jwk, jws
     from jsonpath_ng import jsonpath
@@ -13,6 +16,14 @@ class jwt_pep:
             decoded_token = jwt.JWS()
             decoded_token.deserialize(token)
             token_payload = json.loads(decoded_token.objects['payload'].decode())
+            # check credential validity times
+            now = int(time.time())
+            if 'nbf' in token_payload:
+                if now < token_payload['nbf']:
+                    return False, "Error: Credential is not valid yet"
+            if 'exp' in token_payload:
+                if now > token_payload['exp']:
+                    return False, "Error: Credential has expired"
             # Read the iss claim
             iss = token_payload['iss']
             # Check if iss is trusted
@@ -28,6 +39,8 @@ class jwt_pep:
                 ver_key = jwk.JWK.from_pem(pem_file)
             if (issuer_key_type == "jwt"):
                 ver_key = jwk.JWK.from_json(json.dumps(issuer_key))
+            if (issuer_key_type == "did"):
+                ver_key = Resolver().resolve(issuer_key)
             # Verify the JWS
             decoded_token.verify(ver_key)
             # Check for filters
@@ -38,19 +51,57 @@ class jwt_pep:
         except Exception as e:
             return False, str(e) #Token cannot be decoded
     
-    def verify_dpop(self, dpop_b64, htu=None):
+    def verify_dpop(self, dpop_b64, client_key, htu=None, ath=None, lifetime=None):
         """Verifies a DPoP proof. If the verification succeeds it returns
         True and the DPoP as a jwcrypto.jwt . Otherwise it returns False and the exception error
 
         :param dpop_b64(string): The base64 encoding of the DPoP HTTP header
         :param client_key(dict): The client key encoded as as JWK
-        :param htu(string): The value that htu claim of the DPoP should have
+        :param htu(string): The value that htu claim of the DPoP should have. If set to None, this check is skipped.
+        :param ath(string): The value that ath claim of the DPoP should have. If set to None, this check is skipped.
+        :param lifetime(int): The time after iat that a DPoP will be accepted.If set to None, this check is skipped.
         """
         try:
             dpop_b64_header = dpop_b64.split('.')
             dpop_json_header = json.loads(
                 base64url_decode(dpop_b64_header[0]).decode('utf-8'))
+            dpop_json_claims = json.loads(base64url_decode(dpop_b64_header[1]).decode('utf-8'))
             dpop_key = jwk.JWK.from_json(json.dumps(dpop_json_header['jwk']))
+            
+            '''
+            Perform the checks specified in 
+            https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-04
+            '''
+            #Check typ, alw, jwk
+            #TBD
+
+            #Check jti
+            #TBD
+
+            #Check htm
+            #TBD
+
+            #Check htu
+            #TBD
+
+            #Check iat
+            '''
+            Be careful, this requires client's and verifier's clocks to be in sync
+            '''
+            if expires != None:
+                now = datetime.datetime.now().timestamp()
+                if ("iat" not in dpop_json_claims or dpop_json_claims['iat'] + expires < now):
+                    return False, "DPoP has expired"
+
+
+            #Check ath
+            if ath != None and ("ath" not in dpop_json_claims or dpop_json_claims['ath'] != ath):
+                return False, "'ath' claim doesn't match with hash of JWT"
+
+
+            if dpop_key != client_key: # check that key in DPoP header matches with the key in VC
+                return False, "DPoP header key doesn't match client_key"
+
             dpop_verified = jwt.JWT(jwt=dpop_b64, key=dpop_key)
             return True, dpop_verified
         except Exception as e:

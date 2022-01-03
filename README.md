@@ -13,6 +13,7 @@ The VC verifier component is built using Python3. It depends on the following pa
 python3 -m pip install Werkzeug
 python3 -m pip install jsonpath-ng
 python3 -m pip install jwcrypto
+python3 -m pip install base58
 ```
 
 ### Configuration
