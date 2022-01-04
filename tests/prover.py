@@ -6,10 +6,10 @@ from jwcrypto import jwt, jwk
 from jwcrypto.common import base64url_decode, base64url_encode
 
 class Prover:
-    def generate_valid_dpop(self, owner_key, access_token):
+    def generate_valid_dpop(self, owner_key, access_token, alg="ES256"):
         dpop_header = {
         "typ": "dpop+jwt",
-        "alg": "ES256",
+        "alg": alg,
         "jwk": owner_key.export_public(as_dict=True)
         }
         dpop_claims = {

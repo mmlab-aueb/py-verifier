@@ -1,13 +1,20 @@
 import pytest
 import requests
-import json 
+import json
+from issuer import Issuer
+from prover import Prover
+from jwcrypto import jwk 
 
 
-class TestJWT:
-    def test_valid_authorization_get(self):
-        token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5tbWxhYi5lZHUuZ3IiLCJjbmYiOnsiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJ6MzBXdXhwc1BvdzhLcEgwTjkzdlcyNG5BMEhENDhfTWx1cWdkRVV2dFU0IiwieSI6IlZjS2NvMTJCWkZQdTVIVTJMQkxvdFREOU5pdGRsTnhuQkxuZ0QtZVRhcE0ifSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL21tLmF1ZWIuZ3IvY29udGV4dHMvY2FwYWJpbGl0aWVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJDYXBhYmlsaXRpZXNDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImNhcGFiaWxpdGllcyI6eyJDbG91ZCBzdG9yYWdlIjpbIkZMX1JFQUQiXX19fX0.ibjct11ZXik3He2n-GfugMyTT5qHOJpm7qqvZHJIzEq1SDnnL1_pbAwtfNg3nHnzw7eliHtotHj3SlDzBStMVQ"
-        dpop  = "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InozMFd1eHBzUG93OEtwSDBOOTN2VzI0bkEwSEQ0OF9NbHVxZ2RFVXZ0VTQiLCJ5IjoiVmNLY28xMkJaRlB1NUhVMkxCTG90VEQ5Tml0ZGxOeG5CTG5nRC1lVGFwTSJ9LCJ0eXAiOiJkcG9wK2p3dCJ9.eyJhdGgiOiJGRlRIY250UnJZRWIyM0p2bmRURy1WSjlLZHg0SHplUXBsdFpyY3JBZHJFIiwiaHRtIjoiR0VUIiwiaHR1IjoiaHR0cHM6Ly9yZW1vdGUuY2xvdWQvemVyb2NvcnAiLCJpYXQiOjE1NjIyNjI2MTYsImp0aSI6Ii1Cd0MzRVNjNmFjYzJsVGMifQ.l3udao-0ALH9GoVsXMMh5_R3vLzv13lA4ysTu_dhrXLW9zxFQOTqPkvOUyio1DdOziisHFpCyYwjpZ8MiktTvA"
+class TestJWTDPoP:
+    
+    def test_valid_dpop(self):
+        key = {'kty': 'EC', 'crv': 'P-256', 'x': 'nVpBMFBRaBxTJ18Xjvu49mAPFdjL1KPwhp7NZcGG06U', 'y': 'qwbPL4x3YXoh6GiuKpYvFZ2QocpimTXjIZIW8UMBh78', 'd': 'Jqjv6ns_eEIG-v1CTfZn5CsvJ1g8Q_j0QXRlZvZA4uY'}
+        owner_key = jwk.JWK.from_json(json.dumps(key)) 
+        token = Issuer().issue_valid_vc_with_cnf(owner_key)
+        dpop = Prover().generate_valid_dpop(owner_key, token)
         headers = {'Authorization':'DPoP ' + token, 'Accept': 'application/json', 'dpop':dpop}
         response  = requests.get("http://localhost:9000/secure/jwt-vc-dpop", headers = headers)
         print(response.text)
         assert(response.status_code == 200)
+

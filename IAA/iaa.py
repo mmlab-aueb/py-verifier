@@ -4,6 +4,7 @@ from jwt_pep                 import jwt_pep
 from http_proxy              import http_proxy
 from jwcrypto.common         import base64url_decode, base64url_encode
 from jwcrypto                import jwt, jwk
+from resolver                import Resolver
 
 import json
 import sys
@@ -21,6 +22,7 @@ class IAAHandler():
                 sys.exit("Cannot parse the configuration file")
         self.jwt_pep = jwt_pep()
         self.http_proxy = http_proxy()
+        self.resolver = Resolver()
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)
@@ -61,7 +63,12 @@ class IAAHandler():
                     client_key = jwk.JWK()
                     try:
                         jwt_vc = json.loads(ver_output)
-                        client_key = jwk.JWK.from_json(json.dumps(jwt_vc['cnf']['jwk']))
+                        if ("cnf" in jwt_vc):
+                            client_key = jwk.JWK.from_json(json.dumps(jwt_vc['cnf']['jwk']))
+                        elif ("sub" in jwt_vc):
+                            client_key = self.resolver.resolve(jwt_vc['sub'])
+                        else:
+                            raise Exception("No valid client key")
                         dpop = req.headers.get('dpop')
                         ath=base64url_encode(hashlib.sha256(auth_grant.encode('utf-8')).digest())
                         step2, ver_output = self.jwt_pep.verify_dpop(dpop,client_key, ath=ath)
