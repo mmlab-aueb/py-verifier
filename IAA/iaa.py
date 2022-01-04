@@ -2,13 +2,14 @@ from werkzeug.wrappers       import Request, Response
 from werkzeug.datastructures import Headers
 from jwt_pep                 import jwt_pep
 from http_proxy              import http_proxy
-from jwcrypto.common         import base64url_decode
+from jwcrypto.common         import base64url_decode, base64url_encode
 from jwcrypto                import jwt, jwk
 
 import json
 import sys
 import asyncio
 import base64
+import hashlib
 
 class IAAHandler():
     def __init__(self):
@@ -60,10 +61,12 @@ class IAAHandler():
                     client_key = jwk.JWK()
                     try:
                         jwt_vc = json.loads(ver_output)
-                        client_key.from_json(json.dumps(jwt_vc['cnf']['jwk']))
+                        client_key = jwk.JWK.from_json(json.dumps(jwt_vc['cnf']['jwk']))
                         dpop = req.headers.get('dpop')
-                        step2, ver_output = self.jwt_pep.verify_dpop(dpop)
-                    except:
+                        ath=base64url_encode(hashlib.sha256(auth_grant.encode('utf-8')).digest())
+                        step2, ver_output = self.jwt_pep.verify_dpop(dpop,client_key, ath=ath)
+                    except Exception as e:
+                        print("Error in verifying DPoP: ", str(e))
                         step2 = False    
 
                 if (step1 and step2 ):

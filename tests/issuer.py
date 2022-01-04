@@ -39,6 +39,35 @@ class Issuer:
         vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
         vc.make_signed_token( self.key)
         return vc.serialize()
+    
+    def issue_valid_vc_with_cnf(self, owner_key):
+        jwt_header = {
+            "typ": "jwt",
+            "alg": "ES256",
+            "jwk":  self.key.export_public(as_dict=True)
+        }
+        jwt_claims = {
+            "iss": "http://testscript",
+            "aud": "https://zero.cloud",
+            "cnf": {
+                "jwk":owner_key.export_public(as_dict=True)
+            },
+            "vc": {
+                "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://mm.aueb.gr/contexts/capabilities/v1"
+                ],
+                "type": ["VerifiableCredential","CapabilitiesCredential"],
+                "credentialSubject": {
+                    "capabilities": {
+                        "https://zero.cloud": ["FL_READ"]
+                    }
+                }
+            }
+        }
+        vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
+        vc.make_signed_token( self.key)
+        return vc.serialize()
 
     def issue_valid_vc_with_exp(self):
         jwt_header = {

@@ -88,9 +88,9 @@ class jwt_pep:
             '''
             Be careful, this requires client's and verifier's clocks to be in sync
             '''
-            if expires != None:
+            if lifetime != None:
                 now = datetime.datetime.now().timestamp()
-                if ("iat" not in dpop_json_claims or dpop_json_claims['iat'] + expires < now):
+                if ("iat" not in dpop_json_claims or dpop_json_claims['iat'] + lifetime < now):
                     return False, "DPoP has expired"
 
 
@@ -99,7 +99,7 @@ class jwt_pep:
                 return False, "'ath' claim doesn't match with hash of JWT"
 
 
-            if dpop_key != client_key: # check that key in DPoP header matches with the key in VC
+            if dpop_key.thumbprint() != client_key.thumbprint(): # check that key in DPoP header matches with the key in VC
                 return False, "DPoP header key doesn't match client_key"
 
             dpop_verified = jwt.JWT(jwt=dpop_b64, key=dpop_key)
