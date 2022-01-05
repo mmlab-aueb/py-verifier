@@ -1,5 +1,6 @@
 import json
 import time
+import datetime
 
 from resolver import Resolver
 try:
@@ -51,16 +52,18 @@ class jwt_pep:
         except Exception as e:
             return False, str(e) #Token cannot be decoded
     
-    def verify_dpop(self, dpop_b64, client_key, htu=None, ath=None, lifetime=None):
+    def verify_dpop(self, dpop_b64, client_key, htm, htu=None, ath=None, lifetime=None):
         """Verifies a DPoP proof. If the verification succeeds it returns
         True and the DPoP as a jwcrypto.jwt . Otherwise it returns False and the exception error
 
         :param dpop_b64(string): The base64 encoding of the DPoP HTTP header
         :param client_key(dict): The client key encoded as as JWK
+        :param htm(string): The value that htm claim  of the DPop should have.
         :param htu(string): The value that htu claim of the DPoP should have. If set to None, this check is skipped.
         :param ath(string): The value that ath claim of the DPoP should have. If set to None, this check is skipped.
         :param lifetime(int): The time after iat that a DPoP will be accepted.If set to None, this check is skipped.
         """
+        
         try:
             dpop_b64_header = dpop_b64.split('.')
             dpop_json_header = json.loads(
@@ -72,17 +75,26 @@ class jwt_pep:
             Perform the checks specified in 
             https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-04
             '''
-            #Check typ, alw, jwk
-            #TBD
 
-            #Check jti
-            #TBD
+            #Check typ
+            if ("typ" not in dpop_json_header or dpop_json_header['typ'] != 'dpop+jwt') :
+                return False, "Type header value is not correct"
+
+            #Check alg
+            if ("alg" not in dpop_json_header or dpop_json_header['alg'] == None) : # we should also include the algs supported from our application 
+                return False, "'alg' claim doesn't exist"            
+
+            #Check jti 
+            #jti should be unique
 
             #Check htm
-            #TBD
+            if (dpop_json_claims['htm'] != htm or "htm" not in dpop_json_claims):
+                return False, "'htm' claim doesn't match the HTTP method value of the HTTP request"
 
             #Check htu
-            #TBD
+            #if (htu != None):
+                #if (dpop_json_claims['htu'] != htu or "htu" not in dpop_json_claims) : # the htu does not match the HTTPS URI value for the HTTP request
+                    #return False, "'htu' claim doesn't match the HTTP URI value of the HTTP request"
 
             #Check iat
             '''
@@ -90,7 +102,8 @@ class jwt_pep:
             '''
             if lifetime != None:
                 now = datetime.datetime.now().timestamp()
-                if ("iat" not in dpop_json_claims or dpop_json_claims['iat'] + lifetime < now):
+                print(now)
+                if ("iat" not in dpop_json_claims or int(dpop_json_claims['iat']) + lifetime < now):
                     return False, "DPoP has expired"
 
 
@@ -98,11 +111,12 @@ class jwt_pep:
             if ath != None and ("ath" not in dpop_json_claims or dpop_json_claims['ath'] != ath):
                 return False, "'ath' claim doesn't match with hash of JWT"
 
-
-            if dpop_key.thumbprint() != client_key.thumbprint(): # check that key in DPoP header matches with the key in VC
+            #Check that key in DPoP header matches with the key in VC
+            if dpop_key.thumbprint() != client_key.thumbprint(): 
                 return False, "DPoP header key doesn't match client_key"
 
             dpop_verified = jwt.JWT(jwt=dpop_b64, key=dpop_key)
+            #print(dpop_verified)
             return True, dpop_verified
         except Exception as e:
             print("Error" + str(e))

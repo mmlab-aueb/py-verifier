@@ -71,7 +71,7 @@ class IAAHandler():
                             raise Exception("No valid client key")
                         dpop = req.headers.get('dpop')
                         ath=base64url_encode(hashlib.sha256(auth_grant.encode('utf-8')).digest())
-                        step2, ver_output = self.jwt_pep.verify_dpop(dpop,client_key, ath=ath)
+                        step2, ver_output = self.jwt_pep.verify_dpop(dpop,client_key, req.method, ath=ath)
                     except Exception as e:
                         print("Error in verifying DPoP: ", str(e))
                         step2 = False    
