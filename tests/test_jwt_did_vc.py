@@ -18,7 +18,7 @@ class TestJWTwithDIDs:
         print(response.text)
         assert(response.status_code == 200)
 
-    def test_valid_dpop_with_did(self):
+    def test_valid_dpop_with_didkey(self):
         '''
         For this we need Ed25519 keys
         >>> key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
@@ -33,3 +33,20 @@ class TestJWTwithDIDs:
         response  = requests.get("http://localhost:9000/secure/jwt-vc-dpop", headers = headers)
         print(response.text)
         assert(response.status_code == 200)
+
+    def test_valid_dpop_with_didweb(self):
+        '''
+        >>> key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+        >>> print (key.export(as_dict=True))
+        '''
+        key = {'kty': 'EC', 'crv': 'P-256', 'x': 'K59xUyLtz46yZwjVJ2xYzofrMiAcd84zfBzHnR84lWA', 'y': '9hwIYRBvuZ1-mwKhFPu1yROoS9KYH6_leXzHJFI3iqE', 'd': '9Ha1zlqf1vbRsRAfmVYlI4G2wkwy_xLz7EhWozoWm4U'}
+        owner_key = jwk.JWK.from_json(json.dumps(key))
+        owner_did = "did:web:did.mmlab.edu.gr:mmlab"
+        token = Issuer().issue_valid_vc_with_sub(owner_did)
+        dpop = Prover().generate_valid_dpop(owner_key, token)
+        headers = {'Authorization':'DPoP ' + token, 'Accept': 'application/json', 'dpop':dpop}
+        response  = requests.get("http://localhost:9000/secure/jwt-vc-dpop", headers = headers)
+        print(response.text)
+        assert(response.status_code == 200)
+
+    
