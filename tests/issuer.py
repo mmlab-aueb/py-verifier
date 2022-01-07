@@ -31,7 +31,7 @@ class Issuer:
                 "type": ["VerifiableCredential","CapabilitiesCredential"],
                 "credentialSubject": {
                     "capabilities": {
-                        "https://zero.cloud": ["FL_READ"]
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
                     }
                 }
             }
@@ -60,7 +60,7 @@ class Issuer:
                 "type": ["VerifiableCredential","CapabilitiesCredential"],
                 "credentialSubject": {
                     "capabilities": {
-                        "https://zero.cloud": ["FL_READ"]
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
                     }
                 }
             }
@@ -87,7 +87,7 @@ class Issuer:
                 "type": ["VerifiableCredential","CapabilitiesCredential"],
                 "credentialSubject": {
                     "capabilities": {
-                        "https://zero.cloud": ["FL_READ"]
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
                     }
                 }
             }
@@ -114,7 +114,7 @@ class Issuer:
                 "type": ["VerifiableCredential","CapabilitiesCredential"],
                 "credentialSubject": {
                     "capabilities": {
-                        "https://zero.cloud": ["FL_READ"]
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
                     }
                 }
             }
@@ -133,6 +133,57 @@ class Issuer:
             "iss": "http://testscript",
             "aud": "https://zero.cloud",
             "exp": int(time.time()) - 600, #expired 10 min ago
+            "vc": {
+                "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://mm.aueb.gr/contexts/capabilities/v1"
+                ],
+                "type": ["VerifiableCredential","CapabilitiesCredential"],
+                "credentialSubject": {
+                    "capabilities": {
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
+                    }
+                }
+            }
+        }
+        vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
+        vc.make_signed_token( self.key)
+        return vc.serialize()
+    
+    def issue_without_aud(self):
+        jwt_header = {
+            "typ": "jwt",
+            "alg": "ES256",
+            "jwk":  self.key.export_public(as_dict=True)
+        }
+        jwt_claims = {
+            "iss": "http://testscript",
+            "vc": {
+                "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://mm.aueb.gr/contexts/capabilities/v1"
+                ],
+                "type": ["VerifiableCredential","CapabilitiesCredential"],
+                "credentialSubject": {
+                    "capabilities": {
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
+                    }
+                }
+            }
+        }
+        vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
+        vc.make_signed_token( self.key)
+        return vc.serialize()
+    
+    def issue_without_FL_WRITE(self):
+        jwt_header = {
+            "typ": "jwt",
+            "alg": "ES256",
+            "jwk":  self.key.export_public(as_dict=True)
+        }
+        jwt_claims = {
+            "iss": "http://testscript",
+            "aud": "https://zero.cloud",
             "vc": {
                 "@context": [
                 "https://www.w3.org/2018/credentials/v1",
@@ -176,14 +227,15 @@ class Issuer:
                 "type": ["VerifiableCredential","CapabilitiesCredential"],
                 "credentialSubject": {
                     "capabilities": {
-                        "https://zero.cloud": ["FL_READ"]
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
                     }
                 }
             }
         }
         vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
         vc.make_signed_token(key)
-        return vc.serialize()        
+        return vc.serialize()
+            
 
 if __name__ == '__main__':
     issuer = Issuer()

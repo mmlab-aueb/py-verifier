@@ -122,7 +122,7 @@ class jwt_pep:
             print("Error" + str(e))
             return False, str(e) #Token cannot be decoded
 
-    def _filter(self, json_obj, filters):  
+    def _filter(self, json_obj, filters): 
         for filter in filters:
             jsonpath_expr = parse(filter[0])
             found = False
