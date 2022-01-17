@@ -6,7 +6,7 @@ class http_proxy:
     def forward(self, environ, target, header_rewrite = None):
         path    = environ.get('PATH_INFO')
         req     = Request(environ)
-        query   = req.query_string
+        query   = req.query_string.decode()
         accept  = req.headers.get('Accept')
         content = req.headers.get('Content-Type')
         headers = {}
