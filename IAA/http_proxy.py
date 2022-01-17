@@ -6,6 +6,7 @@ class http_proxy:
     def forward(self, environ, target, header_rewrite = None):
         path    = environ.get('PATH_INFO')
         req     = Request(environ)
+        query   = req.query_string
         accept  = req.headers.get('Accept')
         content = req.headers.get('Content-Type')
         headers = {}
@@ -16,7 +17,7 @@ class http_proxy:
         if(header_rewrite):
             headers.update(header_rewrite)
         if (req.method == "GET"):
-            response  = requests.get(target + path, headers = headers)
+            response  = requests.get(target + path +"?" + query, headers = headers)
         elif (req.method == "PUT"): 
             put_data = req.data
             response  = requests.put(target + path, headers = headers, data = put_data.decode())
