@@ -6,6 +6,7 @@ from jwcrypto.common         import base64url_decode, base64url_encode
 from jwcrypto                import jwt, jwk
 from resolver                import Resolver
 
+import os
 import json
 import sys
 import asyncio
@@ -14,7 +15,8 @@ import hashlib
 
 class IAAHandler():
     def __init__(self):
-        with open('conf/iaa.conf') as f:
+        conf_file = os.getenv('IAA_CONF_FILE', 'conf/iaa.conf')
+        with open(conf_file) as f:
             try:
                 self.conf = json.load(f)
             except json.decoder.JSONDecodeError as error:
@@ -105,7 +107,9 @@ def create_app():
 def main(): 
     from werkzeug.serving import run_simple
     app = create_app()
-    run_simple('localhost', 9000, app)
+    address = os.getenv('IAA_ADDRESS', 'localhost')
+    port = int(os.getenv('IAA_PORT', 9000))
+    run_simple(address, port, app)
 
 if __name__ == '__main__':
     main()
