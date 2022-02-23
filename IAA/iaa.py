@@ -33,6 +33,7 @@ class IAAHandler():
         resource = {}
         output   = 'Invalid or missing input parameters'
         output_header = {}
+        headers = {}
         auth    = req.headers.get('Authorization')
         if (path in self.conf['resources']):
             resource = self.conf['resources'][path]
@@ -85,13 +86,14 @@ class IAAHandler():
             is_client_authorized = True
         if (is_client_authorized):
             if ('proxy' in  resource):
-                code, output = self.http_proxy.forward(environ, resource['proxy']['proxy_pass'], resource['proxy'].get('header_rewrite'))
+                code, output, headers = self.http_proxy.forward(environ, resource['proxy']['proxy_pass'], resource['proxy'].get('header_rewrite'))
             else:
                 code = "200"
                 output = "Authorized request!"
         else:
             output = ver_output
-        response = Response(output.encode(), status=code, mimetype='text/html')
+        #response = Response(output.encode(), status=code, mimetype='text/html')
+        response = Response(output.encode(), status=code, headers=headers)
         if output_header:
             for key,value in output_header.items():
                 response.headers.add(key, value)

@@ -26,4 +26,5 @@ class http_proxy:
             response  = requests.post(target + path, headers = headers, data = post_data.decode())
         code = response.status_code
         output = response.text
-        return code, output
+        headers = response.headers
+        return code, output, headers
