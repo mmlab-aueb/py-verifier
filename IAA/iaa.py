@@ -92,8 +92,7 @@ class IAAHandler():
                 output = "Authorized request!"
         else:
             output = ver_output
-        #response = Response(output.encode(), status=code, mimetype='text/html')
-        response = Response(output.encode(), status=code, headers=headers)
+        response = Response(output.encode(), status=code, mimetype=headers['Content-Type'])
         if output_header:
             for key,value in output_header.items():
                 response.headers.add(key, value)
