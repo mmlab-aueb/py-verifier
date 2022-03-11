@@ -235,9 +235,73 @@ class Issuer:
         vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
         vc.make_signed_token(key)
         return vc.serialize()
-            
+
+    def issue_revoked_vc(self):
+        jwt_header = {
+            "typ": "jwt",
+            "alg": "ES256",
+            "jwk":  self.key.export_public(as_dict=True)
+        }
+        jwt_claims = {
+            "iss": "http://testscript",
+            "aud": "https://zero.cloud",
+            "vc": {
+                "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://mm.aueb.gr/contexts/capabilities/v1",
+                "https://w3id.org/vc/status-list/v1"
+                ],
+                "type": ["VerifiableCredential","CapabilitiesCredential"],
+                "credentialSubject": {
+                    "capabilities": {
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
+                    }
+                },
+                "credentialStatus":{
+                    "type": "RevocationList2021Status",
+                    "statusListIndex": "9",
+                    "statusListCredential": "https://issuer.mmlab.edu.gr/credential/teststatus"
+                }
+            }
+        }
+        vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
+        vc.make_signed_token( self.key)
+        return vc.serialize()
+
+    def issue_non_revoked_vc(self):
+        jwt_header = {
+            "typ": "jwt",
+            "alg": "ES256",
+            "jwk":  self.key.export_public(as_dict=True)
+        }
+        jwt_claims = {
+            "iss": "http://testscript",
+            "aud": "https://zero.cloud",
+            "vc": {
+                "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://mm.aueb.gr/contexts/capabilities/v1",
+                "https://w3id.org/vc/status-list/v1"
+                ],
+                "type": ["VerifiableCredential","CapabilitiesCredential"],
+                "credentialSubject": {
+                    "capabilities": {
+                        "https://zero.cloud": ["FL_READ", "FL_WRITE"]
+                    }
+                },
+                "credentialStatus":{
+                    "type": "RevocationList2021Status",
+                    "statusListIndex": "10",
+                    "statusListCredential": "https://issuer.mmlab.edu.gr/credential/teststatus"
+                }
+            }
+        }
+        vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
+        vc.make_signed_token( self.key)
+        return vc.serialize()
+          
 
 if __name__ == '__main__':
     issuer = Issuer()
-    print (issuer.issue_valid_did_key_iss())
+    print (issuer.issue_revoked_vc())
 

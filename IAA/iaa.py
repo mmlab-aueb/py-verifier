@@ -5,6 +5,7 @@ from http_proxy              import http_proxy
 from jwcrypto.common         import base64url_decode, base64url_encode
 from jwcrypto                import jwt, jwk
 from resolver                import Resolver
+from revocation              import Revocation
 
 import os
 import json
@@ -25,6 +26,7 @@ class IAAHandler():
         self.jwt_pep = jwt_pep()
         self.http_proxy = http_proxy()
         self.resolver = Resolver()
+        self.revocation = Revocation()
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)
@@ -49,15 +51,25 @@ class IAAHandler():
                 (resource['authorization']['type'] == "jwt-vc-dpop" and auth_type == "DPoP")):
                 step1 = False # Validate VC
                 step2 = False # Validate DPoP
-                step3 = False
-                filter = None
+                
                 # Step 1: Validate VC
                 # The VC is just a signed JWT
+                filter = None
+                trusted_issuers  = resource['authorization']['trusted_issuers']
                 if ('filters' in resource['authorization']):
                     filter = resource['authorization']['filters']
                 step1, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
-                    trusted_issuers  = resource['authorization']['trusted_issuers'],  
+                    trusted_issuers  = trusted_issuers,  
                     filter = filter)
+                if step1: # The VC is valid, check if it is revoked
+                    jwt_vc = json.loads(ver_output)
+                    if "credentialStatus" in jwt_vc["vc"]: #There is revocation information
+                        step1 = self.revocation.check_status_from_issuer(
+                            jwt_vc["vc"]["credentialStatus"]["statusListCredential"],
+                            int(jwt_vc["vc"]["credentialStatus"]["statusListIndex"]),
+                            trusted_issuers)
+                        if not step1:
+                            ver_output = "VC has been revoked"
                 
                 # Step 2: Verify proof-of-possession if necessary
                 if (step1 and auth_type == "Bearer"):  # We do not use DPoP
@@ -90,10 +102,10 @@ class IAAHandler():
             else:
                 code = "200"
                 output = "Authorized request!"
-                headers['Content-Type']="text/html"
         else:
             output = ver_output
-            headers['Content-Type']="text/html"
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = "text/html"
         response = Response(output.encode(), status=code, mimetype=headers['Content-Type'])
         if output_header:
             for key,value in output_header.items():
