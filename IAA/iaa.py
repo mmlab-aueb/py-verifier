@@ -13,6 +13,7 @@ import sys
 import asyncio
 import base64
 import hashlib
+import re
 
 class IAAHandler():
     def __init__(self):
@@ -57,6 +58,11 @@ class IAAHandler():
                 filter = None
                 trusted_issuers  = resource['authorization']['trusted_issuers']
                 if ('filters' in resource['authorization']):
+                    # Replace arguments in filters with request paramenters
+                    for filter in resource['authorization']['filters']:
+                        for i, item in enumerate(filter):
+                            for x in re.findall(r'#[a-zA-Z]+',item):
+                                filter[i] = item.replace(x, req.args[x[1:]])
                     filter = resource['authorization']['filters']
                 step1, ver_output = self.jwt_pep.verify_jwt(token=auth_grant, 
                     trusted_issuers  = trusted_issuers,  
