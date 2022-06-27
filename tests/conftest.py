@@ -4,6 +4,8 @@ import pytest
 def IAAComponent():
     import subprocess
     import time
+    import os
+    os.environ["IAA_CONF_FILE"] = "conf/zkp.conf"
     p1 = subprocess.Popen(['python3', 'IAA/iaa.py'])
     time.sleep(5) #Otherwise the server is not ready when tests start
     yield

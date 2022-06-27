@@ -1,14 +1,22 @@
 import os
 import http.server
 import socketserver
+import json
 from http import HTTPStatus
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
+        message= {
+            "owner": "Device1-admin",
+            "measurements":{
+                "temperature":"30oC",
+                "humidity":"60%"
+            }
+        }
         self.send_response(HTTPStatus.OK)
         self.end_headers()
-        self.wfile.write(b'Hello world')
+        self.wfile.write(json.dumps(message).encode())
 
     def do_PUT(self):
         self.send_response(HTTPStatus.OK)

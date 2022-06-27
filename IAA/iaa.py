@@ -105,6 +105,11 @@ class IAAHandler():
         if (is_client_authorized):
             if ('proxy' in  resource):
                 code, output, headers = self.http_proxy.forward(environ, resource['proxy']['proxy_pass'], resource['proxy'].get('header_rewrite'))
+            elif ('zkp_proxy' in  resource):
+                # Unoptimized
+                from zkp_http_proxy import zkp_http_proxy
+                self.zkp_http_proxy = zkp_http_proxy()
+                code, output, headers = self.zkp_http_proxy.forward(environ, resource['zkp_proxy']['proxy_pass'], resource['zkp_proxy'].get('header_rewrite'))
             else:
                 code = "200"
                 output = "Authorized request!"
