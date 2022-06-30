@@ -10,6 +10,14 @@ it  was created by the [ZeroTrustVC](https://mm.aueb.gr/projects/zerotrustvc) pr
    * N. Fotiou, V. A. Siris, G. C. Polyzos, Y. Kortesniemi, D. Lagutin, "Capabilities-based access control for IoT devices using Verifiable Credentials", in IEEE Symposium on Security and Privacy Workshops, Workshop on the Internet of Safe Things (SafeThings), 2022  
    * N. Fotiou, V.A. Siris, G.C. Polyzos, "Capability-based access control for multi-tenant systems using Oauth 2.0 and Verifiable Credentials," Proc. 30th International Conference on Computer Communications and Networks (ICCCN), Athens, Greece, July 2021
 
+## Features
+*	It acts as a transparent HTTP Proxy 
+*	It supports JWT-encoded VCs
+*	It supports VC filtering rules using [JSONPath](https://goessner.net/articles/JsonPath/)
+*	It supports VC proof-of-possession using [DPoP](https://oauth.net/2/dpop/)
+*	It integrates [DID Universal Resolver](https://dev.uniresolver.io/) for supporting the did:web DID method
+*	It supports selective disclosure of the forwarded items using [ZKPs](https://identity.foundation/bbs-signature/draft-bbs-signatures.html) (ZKP branch)
+
 
 ## Usage
 
