@@ -1,8 +1,15 @@
 # VC verifier
-This a VC verifier implemented by the [ZeroTrustVC](https://mm.aueb.gr/projects/zerotrustvc) project. 
-The verifier can be used as an HTTP proxy that transparently protects HTTP-based resources.
+## About
+A VC verifier that acts as an HTTP proxy
 
-The VC verifier is based on the [IAA component of the H2020 SOFIE project](https://github.com/SOFIE-project/identity-authentication-authorization).
+## Research
+* The VC verifier is based on the [IAA component of the H2020 SOFIE project](https://github.com/SOFIE-project/identity-authentication-authorization),
+it  was created by the [ZeroTrustVC](https://mm.aueb.gr/projects/zerotrustvc) project and it is used by the [SelectShare](https://mm.aueb.gr/projects/selectshare) project.
+* The following publications are based on VC Issuer
+   * N. Fotiou, E. Faltaka, V. Kalos, A. Kefala, I. Pittaras, V. A. Siris, G. C. Polyzos, "Continuous authorization over HTTP using Verifiable Credentials and OAuth 2.0", in Open Identity Summit 2022 (OID2022), 2022
+   * N. Fotiou, V. A. Siris, G. C. Polyzos, Y. Kortesniemi, D. Lagutin, "Capabilities-based access control for IoT devices using Verifiable Credentials", in IEEE Symposium on Security and Privacy Workshops, Workshop on the Internet of Safe Things (SafeThings), 2022  
+   * N. Fotiou, V.A. Siris, G.C. Polyzos, "Capability-based access control for multi-tenant systems using Oauth 2.0 and Verifiable Credentials," Proc. 30th International Conference on Computer Communications and Networks (ICCCN), Athens, Greece, July 2021
+
 
 ## Usage
 
