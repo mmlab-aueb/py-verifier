@@ -63,7 +63,7 @@ class Prover:
 
         return result
 
-    def generate_zkp(self, public_key: bytes, message:str, frame:str, signature:bytes) -> tuple[int, str, bytes]:
+    def generate_zkp(self, public_key: bytes, message:str, frame:str, signature:bytes):
         bls_pub_key = BlsKeyPair(public_key=public_key)
         signed_messages = JCan(json.loads(message))
         revealed_message_json = self._frame_message(json.loads(message),json.loads(frame))
