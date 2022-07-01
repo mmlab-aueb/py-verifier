@@ -16,6 +16,8 @@ class Prover:
                 proof_messages.append(ProofMessage(msg, ProofMessageType(2)))      
         return proof_messages
 
+
+
     def _frame_message(self, message:dict, frame:dict, result:dict={})-> dict:
         if isinstance(message, dict):
             to_iter = message
@@ -24,21 +26,38 @@ class Prover:
         else: to_iter = message
 
         for key in to_iter:
-            if str(key) in frame:
+            if str(key) in frame or '*' in frame:
+                _key = "*"
+                if str(key) in frame:
+                    _key = str(key)
+                    if isinstance(frame[_key], str) and frame[_key]!="":
+                        if frame[_key] != message[key]:
+                            return result
                 if isinstance(message[key], dict):
-
-                    if isinstance(result, list):  result.append({})
-                    elif isinstance(result, dict): result[key] = {}
-                    else: raise ValueError("Invalid key or value")
-
-                    self._frame_message(message[key], frame[str(key)], result[key])
+                    if isinstance(result, list):  
+                        result.append({})
+                        self._frame_message(message[key], frame[_key], result[-1])
+                        if result[-1] == {}:
+                            del result[-1]
+                    elif isinstance(result, dict): 
+                        result[key] = {}
+                        self._frame_message(message[key], frame[_key], result[key])
+                        if result[key] == {}:
+                            del result[key]
+                    else: raise ValueError("Invalid key or value")  
                 elif isinstance(message[key], list):
-        
-                    if isinstance(result, list):  result.append([])
-                    elif isinstance(result, dict): result[key] = []
+                    if isinstance(result, list):  
+                        result.append([])
+                        self._frame_message(message[key], frame[_key], result[-1])
+                        if result[-1] == []:
+                            del result[-1]
+                    elif isinstance(result, dict): 
+                        result[key] = []
+                        self._frame_message(message[key], frame[_key], result[key])
+                        if result[key] == []:
+                            del result[key]
                     else: raise ValueError("Invalid key or value")
-        
-                    self._frame_message(message[key], frame[str(key)], result[key])
+                    
                 else: 
                     result[key] = message[key]
 
