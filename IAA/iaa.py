@@ -128,7 +128,7 @@ def create_app():
 def main(): 
     from werkzeug.serving import run_simple
     app = create_app()
-    address = os.getenv('IAA_ADDRESS', 'localhost')
+    address = os.getenv('IAA_ADDRESS', '')
     port = int(os.getenv('IAA_PORT', 9000))
     run_simple(address, port, app)
 

@@ -329,5 +329,5 @@ class Issuer:
 
 if __name__ == '__main__':
     issuer = Issuer()
-    print (issuer.issue_revoked_vc())
+    print (issuer.issue_valid_vc())
 

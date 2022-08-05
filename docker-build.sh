@@ -1,0 +1,1 @@
+docker build -t verifier -f verifier.dockerfile --build-arg LISTENING_PORT="9000" .

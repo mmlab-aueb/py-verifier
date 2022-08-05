@@ -63,6 +63,20 @@ Will become
 ["$.vc.credentialSubject.capabilities.device1[*]", "I1"]
 ```
 
+## Dockerized version
+Build the docker image using the `docker.sh` script. Then you can run the docker image
+using the following command.
+
+```bash
+docker run -tid --rm -p 9000:9000 verifier
+```
+
+You can test that everything is OK by running
+
+```bash
+python3 examples/jwt-vc-client.py
+```
+
 ## Testing
 
 ### Prerequisites
