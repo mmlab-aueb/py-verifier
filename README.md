@@ -64,7 +64,7 @@ Will become
 ```
 
 ## Dockerized version
-Build the docker image using the `docker.sh` script. Then you can run the docker image
+Build the docker image using the `docker-build.sh` script. Then you can run the docker image
 using the following command.
 
 ```bash
